@@ -47,7 +47,8 @@ typedef int sJsonType; // enum -> sJsonType_
 //-----------------------------------------------------------------------------
 namespace Semper
 {
-	sJsonObject* parse_json(char* rawData, int size);
+	sJsonObject* load_json(char* rawData, int size);
+	void         free_json(sJsonObject** rootObject);
 }
 
 //-----------------------------------------------------------------------------
@@ -346,7 +347,7 @@ _update_children_pointers(sJsonObject* object, mvVector<sJsonObject*>* objects)
 }
 
 sJsonObject*
-Semper::parse_json(char* rawData, int size)
+Semper::load_json(char* rawData, int size)
 {
 	sStack parentIDStack;
 	mvVector<sJsonObject*> objectArray;
@@ -522,6 +523,26 @@ Semper::parse_json(char* rawData, int size)
 	objectArray.clear();
 	parentIDStack.data.clear();
 	return rootObject;
+}
+
+static void
+_free_json(sJsonObject* object)
+{
+	for(int i = 0; i < object->childCount; i++)
+	{
+		_free_json(&object->children[i]);
+	}
+	if(object->childCount > 0)
+		S_FREE(object->children);
+}
+
+void
+Semper::free_json(sJsonObject** rootObjectPtr)
+{
+	sJsonObject* rootObject = *rootObjectPtr;
+	_free_json(rootObject);
+	S_FREE(rootObject);
+	rootObjectPtr = nullptr;
 }
 
 #endif
