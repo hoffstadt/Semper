@@ -20,20 +20,20 @@
 #define S_JSON_MAX_NAME_LENGTH 256
 #endif
 
-#ifndef S_ASSERT
+#ifndef S_JSON_ASSERT
 #include <assert.h>
-#define S_ASSERT(x) assert(x)
+#define S_JSON_ASSERT(x) assert(x)
 #endif
 
 #include <stdlib.h>
 #include <string.h> // memcpy, strcmp
 
-#ifndef S_ALLOC
-#define S_ALLOC(x) malloc(x)
+#ifndef S_JSON_ALLOC
+#define S_JSON_ALLOC(x) malloc(x)
 #endif
 
-#ifndef S_FREE
-#define S_FREE(x) free(x)
+#ifndef S_JSON_FREE
+#define S_JSON_FREE(x) free(x)
 #endif
 
 //-----------------------------------------------------------------------------
@@ -84,20 +84,20 @@ struct sJsonObject
 	inline bool         doesMemberExist(const char* member){ return getMember(member) != nullptr;}
 
 	// cast values
-	inline int      asInt()    { S_ASSERT(type == S_JSON_TYPE_NUMBER); return (int)strtod(value, nullptr);}
-	inline unsigned asUInt()   { S_ASSERT(type == S_JSON_TYPE_NUMBER); return (unsigned)strtod(value, nullptr);}
-	inline float    asFloat()  { S_ASSERT(type == S_JSON_TYPE_NUMBER); return (float)asDouble();}
-	inline double   asDouble() { S_ASSERT(type == S_JSON_TYPE_NUMBER); return strtod(value, nullptr);}
-	inline char*    asString() { S_ASSERT(type == S_JSON_TYPE_STRING); return value;}
-	inline bool    	asBool()   { S_ASSERT(type == S_JSON_TYPE_BOOL);   return value[0] == 't';}
+	inline int      asInt()    { S_JSON_ASSERT(type == S_JSON_TYPE_NUMBER); return (int)strtod(value, nullptr);}
+	inline unsigned asUInt()   { S_JSON_ASSERT(type == S_JSON_TYPE_NUMBER); return (unsigned)strtod(value, nullptr);}
+	inline float    asFloat()  { S_JSON_ASSERT(type == S_JSON_TYPE_NUMBER); return (float)asDouble();}
+	inline double   asDouble() { S_JSON_ASSERT(type == S_JSON_TYPE_NUMBER); return strtod(value, nullptr);}
+	inline char*    asString() { S_JSON_ASSERT(type == S_JSON_TYPE_STRING); return value;}
+	inline bool    	asBool()   { S_JSON_ASSERT(type == S_JSON_TYPE_BOOL);   return value[0] == 't';}
 	
 	// cast array values
-	inline void asIntArray   (int*      out, int size) { S_ASSERT(type == S_JSON_TYPE_ARRAY); S_ASSERT(out); if(size > childCount) size = childCount; for(int i = 0; i < size; i++) out[i] = children[i].asInt();}
-	inline void asUIntArray  (unsigned* out, int size) { S_ASSERT(type == S_JSON_TYPE_ARRAY); S_ASSERT(out); if(size > childCount) size = childCount; for(int i = 0; i < size; i++) out[i] = children[i].asUInt();}
-	inline void asFloatArray (float*    out, int size) { S_ASSERT(type == S_JSON_TYPE_ARRAY); S_ASSERT(out); if(size > childCount) size = childCount; for(int i = 0; i < size; i++) out[i] = children[i].asFloat();}
-	inline void asDoubleArray(double*   out, int size) { S_ASSERT(type == S_JSON_TYPE_ARRAY); S_ASSERT(out); if(size > childCount) size = childCount; for(int i = 0; i < size; i++) out[i] = children[i].asDouble();}
-	inline void asBoolArray  (bool*     out, int size) { S_ASSERT(type == S_JSON_TYPE_ARRAY); S_ASSERT(out); if(size > childCount) size = childCount; for(int i = 0; i < size; i++) out[i] = children[i].asBool();}
-	inline void asStringArray(char**    out, int size) { S_ASSERT(type == S_JSON_TYPE_ARRAY); S_ASSERT(out); if(size > childCount) size = childCount; for(int i = 0; i < size; i++) out[i] = children[i].asString();}
+	inline void asIntArray   (int*      out, int size) { S_JSON_ASSERT(type == S_JSON_TYPE_ARRAY); S_JSON_ASSERT(out); if(size > childCount) size = childCount; for(int i = 0; i < size; i++) out[i] = children[i].asInt();}
+	inline void asUIntArray  (unsigned* out, int size) { S_JSON_ASSERT(type == S_JSON_TYPE_ARRAY); S_JSON_ASSERT(out); if(size > childCount) size = childCount; for(int i = 0; i < size; i++) out[i] = children[i].asUInt();}
+	inline void asFloatArray (float*    out, int size) { S_JSON_ASSERT(type == S_JSON_TYPE_ARRAY); S_JSON_ASSERT(out); if(size > childCount) size = childCount; for(int i = 0; i < size; i++) out[i] = children[i].asFloat();}
+	inline void asDoubleArray(double*   out, int size) { S_JSON_ASSERT(type == S_JSON_TYPE_ARRAY); S_JSON_ASSERT(out); if(size > childCount) size = childCount; for(int i = 0; i < size; i++) out[i] = children[i].asDouble();}
+	inline void asBoolArray  (bool*     out, int size) { S_JSON_ASSERT(type == S_JSON_TYPE_ARRAY); S_JSON_ASSERT(out); if(size > childCount) size = childCount; for(int i = 0; i < size; i++) out[i] = children[i].asBool();}
+	inline void asStringArray(char**    out, int size) { S_JSON_ASSERT(type == S_JSON_TYPE_ARRAY); S_JSON_ASSERT(out); if(size > childCount) size = childCount; for(int i = 0; i < size; i++) out[i] = children[i].asString();}
 
 	// retrieve and cast values
 	inline const char* getStringMember(const char* member, const char* defaultValue=0)     { auto m = getMember(member); return m==0       ? defaultValue : m->asString();}
@@ -115,8 +115,8 @@ struct sJsonObject
 	inline void getBoolArrayMember  (const char* member, bool*         out, int size){ auto m = getMember(member); if(m) m->asBoolArray(out, size);}
 	inline void getStringArrayMember(const char* member, char**        out, int size){ auto m = getMember(member); if(m) m->asStringArray(out, size);}
 
-	inline sJsonObject& operator[](const char* member) { auto m = getMember(member); S_ASSERT(m!=nullptr); return m==nullptr ? *this : *m;}
-	inline sJsonObject& operator[](int i)              { S_ASSERT(children != nullptr); S_ASSERT(i < childCount); return children[i]; };
+	inline sJsonObject& operator[](const char* member) { auto m = getMember(member); S_JSON_ASSERT(m!=nullptr); return m==nullptr ? *this : *m;}
+	inline sJsonObject& operator[](int i)              { S_JSON_ASSERT(children != nullptr); S_JSON_ASSERT(i < childCount); return children[i]; };
 };
 
 #endif
@@ -125,31 +125,31 @@ struct sJsonObject
 
 // borrowed from Dear ImGui
 template<typename T>
-struct mvVector
+struct sJsonVector_
 {
 	int size     = 0u;
 	int capacity = 0u;
 	T*  data     = nullptr;
-	inline mvVector() { size = capacity = 0; data = nullptr; }
-	inline mvVector<T>& operator=(const mvVector<T>& src) { clear(); resize(src.size); memcpy(data, src.data, (size_t)size * sizeof(T)); return *this; }
+	inline sJsonVector_() { size = capacity = 0; data = nullptr; }
+	inline sJsonVector_<T>& operator=(const sJsonVector_<T>& src) { clear(); resize(src.size); memcpy(data, src.data, (size_t)size * sizeof(T)); return *this; }
 	inline bool empty() const { return size == 0; }
 	inline int  size_in_bytes() const   { return size * (int)sizeof(T); }
-	inline T&   operator[](int i) { S_ASSERT(i >= 0 && i < size); return data[i]; }
-	inline void clear() { if (data) { size = capacity = 0; S_FREE(data); data = nullptr; } }
+	inline T&   operator[](int i) { S_JSON_ASSERT(i >= 0 && i < size); return data[i]; }
+	inline void clear() { if (data) { size = capacity = 0; S_JSON_FREE(data); data = nullptr; } }
 	inline T*   begin() { return data; }
     inline T*   end() { return data + size; }
-	inline T&   back() { S_ASSERT(size > 0); return data[size - 1]; }
-	inline void swap(mvVector<T>& rhs) { int rhs_size = rhs.size; rhs.size = size; size = rhs_size; int rhs_cap = rhs.capacity; rhs.capacity = capacity; capacity = rhs_cap; T* rhs_data = rhs.data; rhs.data = data; data = rhs_data; }
+	inline T&   back() { S_JSON_ASSERT(size > 0); return data[size - 1]; }
+	inline void swap(sJsonVector_<T>& rhs) { int rhs_size = rhs.size; rhs.size = size; size = rhs_size; int rhs_cap = rhs.capacity; rhs.capacity = capacity; capacity = rhs_cap; T* rhs_data = rhs.data; rhs.data = data; data = rhs_data; }
 	inline int  _grow_capacity(int sz) { int new_capacity = capacity ? (capacity + capacity / 2) : 8; return new_capacity > sz ? new_capacity : sz; }
 	inline void resize(int new_size) { if (new_size > capacity) reserve(_grow_capacity(new_size)); size = new_size; }
-	inline void reserve(int new_capacity) { if (new_capacity <= capacity) return; T* new_data = (T*)S_ALLOC((size_t)new_capacity * sizeof(T)); if (data) { memcpy(new_data, data, (size_t)size * sizeof(T)); S_FREE(data); } data = new_data; capacity = new_capacity; }
+	inline void reserve(int new_capacity) { if (new_capacity <= capacity) return; T* new_data = (T*)S_JSON_ALLOC((size_t)new_capacity * sizeof(T)); if (data) { memcpy(new_data, data, (size_t)size * sizeof(T)); S_JSON_FREE(data); } data = new_data; capacity = new_capacity; }
 	inline void push_back(const T& v) { if (size == capacity) reserve(_grow_capacity(size*2)); memcpy(&data[size], &v, sizeof(v)); size++;}
-	inline void pop_back() { S_ASSERT(size > 0); size--; }
+	inline void pop_back() { S_JSON_ASSERT(size > 0); size--; }
 };
 
-typedef int sToken_Type;
+typedef int sJsonToken_Type;
 
-enum sToken_Type_
+enum sJsonToken_Type_
 {
 	S_JSON_TOKEN_NONE,
 	S_JSON_TOKEN_LEFT_BRACE,
@@ -163,13 +163,13 @@ enum sToken_Type_
 	S_JSON_TOKEN_MEMBER, // string but on the left of ":"
 };
 
-struct sToken_
+struct sJsonToken_
 {
-	sToken_Type type = S_JSON_TOKEN_NONE;
-	mvVector<char> value;
+	sJsonToken_Type type = S_JSON_TOKEN_NONE;
+	sJsonVector_<char> value;
 };
 
-struct sStack
+struct sJsonStack_
 {
 	inline void push(int id){ if (data.empty()) data.resize(2048); if (currentIndex == data.size) data.resize(data.size * 2); data[currentIndex++] = id;}
 	inline void pop()   { data[currentIndex] = -1; currentIndex--;}
@@ -177,18 +177,18 @@ struct sStack
 	inline bool empty() { return currentIndex == 0;}
 
 	int currentIndex = 0;
-	mvVector<int> data;
+	sJsonVector_<int> data;
 };
 
 static void
-_parse_for_tokens(char* rawData, mvVector<sToken_>& tokens)
+_parse_for_tokens(char* rawData, sJsonVector_<sJsonToken_>& tokens)
 {
 	int currentPos = 0u;
 	char currentChar = rawData[currentPos];
 	char basicTokens[] = { '{', '}', '[', ']', ':', ',' };
 
 	bool inString = false;
-	mvVector<char> buffer;
+	sJsonVector_<char> buffer;
 
 	while (currentChar != 0)
 	{
@@ -201,7 +201,7 @@ _parse_for_tokens(char* rawData, mvVector<sToken_>& tokens)
 				{
 					if (!buffer.empty())
 					{
-						sToken_ primitivetoken{};
+						sJsonToken_ primitivetoken{};
 						primitivetoken.type = S_JSON_TOKEN_PRIMITIVE;
 						buffer.push_back('\0');
 						for (int i = 0; i < buffer.size; i++)
@@ -213,7 +213,7 @@ _parse_for_tokens(char* rawData, mvVector<sToken_>& tokens)
 						buffer.clear();
 					}
 
-					sToken_ token{};
+					sJsonToken_ token{};
 					if      (currentChar == '{') token.type = S_JSON_TOKEN_LEFT_BRACE;
 					else if (currentChar == '}') token.type = S_JSON_TOKEN_RIGHT_BRACE;
 					else if (currentChar == '[') token.type = S_JSON_TOKEN_LEFT_BRACKET;
@@ -238,7 +238,7 @@ _parse_for_tokens(char* rawData, mvVector<sToken_>& tokens)
 			{
 				if (inString)
 				{
-					sToken_ token{};
+					sJsonToken_ token{};
 					buffer.push_back('\0');
 					for (int i = 0; i < buffer.size; i++)
 					{
@@ -323,46 +323,46 @@ _remove_whitespace(char* rawData, char* spacesRemoved, size_t size)
 }
 
 static void
-_update_children_pointers(sJsonObject* object, mvVector<sJsonObject*>* objects)
+_update_children_pointers(sJsonObject* object, sJsonVector_<sJsonObject*>* objects)
 {
-	S_ASSERT(object->_internal);
+	S_JSON_ASSERT(object->_internal);
 
-	if((*(mvVector<int>*)(object->_internal)).empty())
+	if((*(sJsonVector_<int>*)(object->_internal)).empty())
 	{
-		S_FREE(object->_internal);
+		S_JSON_FREE(object->_internal);
 		object->_internal = nullptr;
 		return;
 	}
 
-	object->childCount = (*(mvVector<int>*)(object->_internal)).size;
-	object->children = (sJsonObject*)S_ALLOC(sizeof(sJsonObject)*object->childCount);
-	for(int i = 0; i < (*(mvVector<int>*)(object->_internal)).size; i++)
+	object->childCount = (*(sJsonVector_<int>*)(object->_internal)).size;
+	object->children = (sJsonObject*)S_JSON_ALLOC(sizeof(sJsonObject)*object->childCount);
+	for(int i = 0; i < (*(sJsonVector_<int>*)(object->_internal)).size; i++)
 	{
-		object->children[i] = *(*objects)[(*(mvVector<int>*)(object->_internal))[i]];
+		object->children[i] = *(*objects)[(*(sJsonVector_<int>*)(object->_internal))[i]];
 		_update_children_pointers(&object->children[i], objects);
 	}
 
-	S_FREE(object->_internal);
+	S_JSON_FREE(object->_internal);
 	object->_internal = nullptr;
 }
 
 sJsonObject*
 Semper::load_json(char* rawData, int size)
 {
-	sStack parentIDStack;
-	mvVector<sJsonObject*> objectArray;
+	sJsonStack_ parentIDStack;
+	sJsonVector_<sJsonObject*> objectArray;
 
-	char* spacesRemoved = (char*)S_ALLOC(sizeof(char)*size);
+	char* spacesRemoved = (char*)S_JSON_ALLOC(sizeof(char)*size);
 	_remove_whitespace(rawData, spacesRemoved, size);
 
-	mvVector<sToken_>* tokens =  (mvVector<sToken_>*)S_ALLOC(sizeof(mvVector<sToken_>));
-	new (tokens) mvVector<sToken_>();
+	sJsonVector_<sJsonToken_>* tokens =  (sJsonVector_<sJsonToken_>*)S_JSON_ALLOC(sizeof(sJsonVector_<sJsonToken_>));
+	new (tokens) sJsonVector_<sJsonToken_>();
 	_parse_for_tokens(spacesRemoved, *tokens);
 
-	sJsonObject *rootObject = (sJsonObject *)S_ALLOC(sizeof(sJsonObject));
+	sJsonObject *rootObject = (sJsonObject *)S_JSON_ALLOC(sizeof(sJsonObject));
 	rootObject->type = S_JSON_TYPE_OBJECT;
-	rootObject->_internal = (mvVector<int>*)S_ALLOC(sizeof(mvVector<int>));
-	new (rootObject->_internal) mvVector<int>();
+	rootObject->_internal = (sJsonVector_<int>*)S_JSON_ALLOC(sizeof(sJsonVector_<int>));
+	new (rootObject->_internal) sJsonVector_<int>();
 	
 	objectArray.push_back(rootObject);
 	parentIDStack.push(0);
@@ -389,13 +389,13 @@ Semper::load_json(char* rawData, int size)
 			}
 			else
 			{
-				sJsonObject *newObject = (sJsonObject*)S_ALLOC(sizeof(sJsonObject));
+				sJsonObject *newObject = (sJsonObject*)S_JSON_ALLOC(sizeof(sJsonObject));
 				newObject->type = S_JSON_TYPE_OBJECT;
-				newObject->_internal = (mvVector<int>*)S_ALLOC(sizeof(mvVector<int>));
-				new (newObject->_internal) mvVector<int>();
+				newObject->_internal = (sJsonVector_<int>*)S_JSON_ALLOC(sizeof(sJsonVector_<int>));
+				new (newObject->_internal) sJsonVector_<int>();
 				objectArray.push_back(newObject);
 				parentIDStack.push(objectArray.size-1);
-				(*(mvVector<int>*)(parent->_internal)).push_back(objectArray.size-1);
+				(*(sJsonVector_<int>*)(parent->_internal)).push_back(objectArray.size-1);
 			}
 			i++;
 			break;
@@ -410,13 +410,13 @@ Semper::load_json(char* rawData, int size)
 			}
 			else
 			{
-				sJsonObject *newObject = (sJsonObject*)S_ALLOC(sizeof(sJsonObject));
+				sJsonObject *newObject = (sJsonObject*)S_JSON_ALLOC(sizeof(sJsonObject));
 				newObject->type = S_JSON_TYPE_ARRAY;
-				newObject->_internal = (mvVector<int>*)S_ALLOC(sizeof(mvVector<int>));
-				new (newObject->_internal) mvVector<int>();
+				newObject->_internal = (sJsonVector_<int>*)S_JSON_ALLOC(sizeof(sJsonVector_<int>));
+				new (newObject->_internal) sJsonVector_<int>();
 				objectArray.push_back(newObject);
 				parentIDStack.push(objectArray.size-1);
-				(*(mvVector<int>*)(parent->_internal)).push_back(objectArray.size-1);	
+				(*(sJsonVector_<int>*)(parent->_internal)).push_back(objectArray.size-1);	
 			}
 			i++;
 			break;
@@ -439,17 +439,17 @@ Semper::load_json(char* rawData, int size)
 		case S_JSON_TOKEN_MEMBER:
 		{
 
-			sJsonObject* newObject = (sJsonObject*)S_ALLOC(sizeof(sJsonObject));
+			sJsonObject* newObject = (sJsonObject*)S_JSON_ALLOC(sizeof(sJsonObject));
 			objectArray.push_back(newObject);
-			newObject->_internal = (mvVector<int>*)S_ALLOC(sizeof(mvVector<int>));
-			new (newObject->_internal) mvVector<int>();
+			newObject->_internal = (sJsonVector_<int>*)S_JSON_ALLOC(sizeof(sJsonVector_<int>));
+			new (newObject->_internal) sJsonVector_<int>();
 			parentIDStack.push(objectArray.size-1);
-			(*(mvVector<int>*)(parent->_internal)).push_back(objectArray.size-1);
+			(*(sJsonVector_<int>*)(parent->_internal)).push_back(objectArray.size-1);
 			memcpy(newObject->name, (*tokens)[i].value.data, (*tokens)[i].value.size_in_bytes());
 
 			// look ahead to 2 tokens to look at type (skipping over ':' )
-			sToken_ valueToken = (*tokens)[i + 2];
-			sToken_Type valueType = valueToken.type;
+			sJsonToken_ valueToken = (*tokens)[i + 2];
+			sJsonToken_Type valueType = valueToken.type;
 			if      (valueType == S_JSON_TOKEN_LEFT_BRACKET) newObject->type = S_JSON_TYPE_ARRAY;
 			else if (valueType == S_JSON_TOKEN_LEFT_BRACE)   newObject->type = S_JSON_TYPE_OBJECT;
 			else if (valueType == S_JSON_TOKEN_STRING)       newObject->type = S_JSON_TYPE_STRING;
@@ -475,13 +475,13 @@ Semper::load_json(char* rawData, int size)
 			}
 			else // in array
 			{
-				sJsonObject *newObject = (sJsonObject*)S_ALLOC(sizeof(sJsonObject));
+				sJsonObject *newObject = (sJsonObject*)S_JSON_ALLOC(sizeof(sJsonObject));
 				newObject->type = S_JSON_TYPE_STRING;
-				newObject->_internal = (mvVector<int>*)S_ALLOC(sizeof(mvVector<int>));
-				new (newObject->_internal) mvVector<int>();
+				newObject->_internal = (sJsonVector_<int>*)S_JSON_ALLOC(sizeof(sJsonVector_<int>));
+				new (newObject->_internal) sJsonVector_<int>();
 				objectArray.push_back(newObject);
 				newObject->value = (*tokens)[i].value.data;
-				(*(mvVector<int>*)(parent->_internal)).push_back(objectArray.size-1);	
+				(*(sJsonVector_<int>*)(parent->_internal)).push_back(objectArray.size-1);	
 			}
 			i++;
 			break;
@@ -497,16 +497,16 @@ Semper::load_json(char* rawData, int size)
 			}
 			else // in array
 			{
-				sJsonObject *newObject = (sJsonObject*)S_ALLOC(sizeof(sJsonObject));
+				sJsonObject *newObject = (sJsonObject*)S_JSON_ALLOC(sizeof(sJsonObject));
 				if((*tokens)[i].value.data[0] == 't')      newObject->type = S_JSON_TYPE_BOOL;
 				else if((*tokens)[i].value.data[0] == 'f') newObject->type = S_JSON_TYPE_BOOL;
 				else if((*tokens)[i].value.data[0] == 'n') newObject->type = S_JSON_TYPE_NULL;
 				else                                       newObject->type = S_JSON_TYPE_NUMBER;
-				newObject->_internal = (mvVector<int>*)S_ALLOC(sizeof(mvVector<int>));
-				new (newObject->_internal) mvVector<int>();
+				newObject->_internal = (sJsonVector_<int>*)S_JSON_ALLOC(sizeof(sJsonVector_<int>));
+				new (newObject->_internal) sJsonVector_<int>();
 				objectArray.push_back(newObject);
 				newObject->value = (*tokens)[i].value.data;
-				(*(mvVector<int>*)(parent->_internal)).push_back(objectArray.size-1);	
+				(*(sJsonVector_<int>*)(parent->_internal)).push_back(objectArray.size-1);	
 			}
 			i++;
 			break;
@@ -533,7 +533,7 @@ _free_json(sJsonObject* object)
 		_free_json(&object->children[i]);
 	}
 	if(object->childCount > 0)
-		S_FREE(object->children);
+		S_JSON_FREE(object->children);
 }
 
 void
@@ -541,7 +541,7 @@ Semper::free_json(sJsonObject** rootObjectPtr)
 {
 	sJsonObject* rootObject = *rootObjectPtr;
 	_free_json(rootObject);
-	S_FREE(rootObject);
+	S_JSON_FREE(rootObject);
 	rootObjectPtr = nullptr;
 }
 

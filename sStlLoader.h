@@ -15,6 +15,19 @@
 #ifndef SEMPER_STLLOAD_H
 #define SEMPER_STLLOAD_H
 
+#ifndef S_STL_ALLOC
+#define S_STL_ALLOC(x) malloc(x)
+#endif
+
+#ifndef S_STL_FREE
+#define S_STL_FREE(x) free(x)
+#endif
+
+#ifndef S_STL_ASSERT
+#include <assert.h>
+#define S_STL_ASSERT(_EXPR) assert(_EXPR)
+#endif
+
 //-----------------------------------------------------------------------------
 // [SECTION] Forward declarations and basic types
 //-----------------------------------------------------------------------------
@@ -28,8 +41,8 @@ struct sStlModel;
 
 namespace Semper
 {
-    sStlModel load_stl_model(const char* file, sStlOptions options);
-    void      cleanup_stl_model(sStlModel& model);
+    sStlModel load_stl(const char* file, sStlOptions options);
+    void      cleanup_stl(sStlModel& model);
 }
 
 //-----------------------------------------------------------------------------
@@ -62,11 +75,6 @@ struct sStlOptions
 #include <stdlib.h>
 #include <string.h>
 
-#ifndef S_ASSERT
-#include <assert.h>
-#define S_ASSERT(_EXPR) assert(_EXPR) // You can override the default assert handler by editing sSemperConfig.h
-#endif
-
 static char*
 read_file_(const char* file, unsigned& size, const char* mode)
 {
@@ -74,7 +82,7 @@ read_file_(const char* file, unsigned& size, const char* mode)
 
     if (dataFile == nullptr)
     {
-        assert(false && "File not found.");
+        S_STL_ASSERT(false && "File not found.");
         return nullptr;
     }
 
@@ -84,7 +92,7 @@ read_file_(const char* file, unsigned& size, const char* mode)
     fseek(dataFile, 0, SEEK_SET);
 
     // allocate memory to contain the whole file:
-    char* data = new char[size];
+    char* data = (char*)S_STL_ALLOC(sizeof(char)*size);
 
     // copy the file into the buffer:
     size_t result = fread(data, sizeof(char), size, dataFile);
@@ -95,7 +103,7 @@ read_file_(const char* file, unsigned& size, const char* mode)
         else if (ferror(dataFile)) {
             perror("Error reading test.bin");
         }
-        assert(false && "File not read.");
+        S_STL_ASSERT(false && "File not read.");
     }
 
     fclose(dataFile);
@@ -119,12 +127,12 @@ struct sSTLVector
     int capacity_;
     T*  data_;
     inline sSTLVector() {size_=capacity_=0; data_=nullptr;}
-    inline void     reserve(int new_capacity) {if (new_capacity <= capacity_) return; T* new_data = (T*)malloc((size_t)new_capacity * sizeof(T)); if (data_) { memcpy(new_data, data_, (size_t)size_ * sizeof(T)); free(data_); } data_ = new_data; capacity_ = new_capacity;}
+    inline void     reserve(int new_capacity) {if (new_capacity <= capacity_) return; T* new_data = (T*)S_STL_ALLOC((size_t)new_capacity * sizeof(T)); if (data_) { memcpy(new_data, data_, (size_t)size_ * sizeof(T)); S_STL_FREE(data_); } data_ = new_data; capacity_ = new_capacity;}
     inline int      _grow_capacity(int sz) const { int new_capacity = capacity_ ? (capacity_ + capacity_ / 2) : 8; return new_capacity > sz ? new_capacity : sz; }
-    void            release(){ if(data_) free(data_); size_=capacity_=0; data_=nullptr;}
+    void            release(){ if(data_) S_STL_FREE(data_); size_=capacity_=0; data_=nullptr;}
     inline void     push_back(const T& v) { if (size_ == capacity_) reserve(_grow_capacity(size_ + 1)); memcpy(&data_[size_], &v, sizeof(v)); size_++; }
-    inline T&       operator[](int i) { S_ASSERT(i >= 0 && i < size_); return data_[i]; }
-    inline const T& operator[](int i) const { S_ASSERT(i >= 0 && i < size_); return data_[i]; }
+    inline T&       operator[](int i) { S_STL_ASSERT(i >= 0 && i < size_); return data_[i]; }
+    inline const T& operator[](int i) const { S_STL_ASSERT(i >= 0 && i < size_); return data_[i]; }
 };
 IM_MSVC_RUNTIME_CHECKS_RESTORE
 
@@ -201,7 +209,7 @@ pack_data(sSTLVector<float>& values, sStlModel& model, const sStlOptions& option
     int faceCount = values.size_/12;
     if(options.includeNormals)
     {
-        model.data = (float*)malloc(sizeof(float)*faceCount*18);
+        model.data = (float*)S_STL_ALLOC(sizeof(float)*faceCount*18);
         model.count = faceCount*18;
         unsigned currentItem = 0u;
         for(int i = 0; i < values.size_-12; i+=12)
@@ -248,7 +256,7 @@ pack_data(sSTLVector<float>& values, sStlModel& model, const sStlOptions& option
     }
     else
     {
-        model.data = (float*)malloc(sizeof(float)*faceCount*9);
+        model.data = (float*)S_STL_ALLOC(sizeof(float)*faceCount*9);
         model.count = faceCount*9;
         unsigned currentItem = 0u;
         for(int i = 0; i < values.size_-12; i+=12)
@@ -346,7 +354,7 @@ load_stl_binary_model_(char* fileData, unsigned fileSize, sStlModel& model, cons
 }
 
 sStlModel
-Semper::load_stl_model(const char* file, sStlOptions options)
+Semper::load_stl(const char* file, sStlOptions options)
 {
     sStlModel model;
     unsigned fileSize = 0u;
@@ -360,11 +368,11 @@ Semper::load_stl_model(const char* file, sStlOptions options)
 }
 
 void
-Semper::cleanup_stl_model(sStlModel& model)
+Semper::cleanup_stl(sStlModel& model)
 {
     model.count = 0;
-    free(model.data);
-    free(model.name);
+    S_STL_FREE(model.data);
+    S_STL_FREE(model.name);
     model.data = nullptr;
     model.name = nullptr;
 }
