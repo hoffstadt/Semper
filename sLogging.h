@@ -93,7 +93,16 @@
 
 */
 
-#pragma once
+#ifndef SEMPER_LOGGING_H
+#define SEMPER_LOGGING_H
+
+#ifndef S_LOGGING_ADDITIONAL_CHANNEL_COUNT
+#define S_LOGGING_ADDITIONAL_CHANNEL_COUNT 3
+#endif
+
+#ifndef S_LOGGING_MAX_PATH_LENGTH
+#define S_LOGGING_MAX_PATH_LENGTH 512
+#endif
 
 // includes
 #include <cstdio>  // printf
@@ -226,17 +235,19 @@ struct sLoggingChannel
     sLogChannelID    id;
     sLogChannelLevel level;
     sLogChannelType  type;
-    char             name[S_MAX_PATH_LENGTH];
-    char             path[S_MAX_PATH_LENGTH];
+    char             name[S_LOGGING_MAX_PATH_LENGTH];
+    char             path[S_LOGGING_MAX_PATH_LENGTH];
 };
 
 struct sLoggingContext
 {
-    sLoggingChannel channels[S_LOG_CHANNEL_COUNT+S_ADDITIONAL_CHANNEL_COUNT];
-    int             channelStack[S_LOG_CHANNEL_COUNT+S_ADDITIONAL_CHANNEL_COUNT];
+    sLoggingChannel channels[S_LOG_CHANNEL_COUNT+S_LOGGING_ADDITIONAL_CHANNEL_COUNT];
+    int             channelStack[S_LOG_CHANNEL_COUNT+S_LOGGING_ADDITIONAL_CHANNEL_COUNT];
     int             stackIndex;
-    const size_t    numOfChannels = S_LOG_CHANNEL_COUNT+S_ADDITIONAL_CHANNEL_COUNT;
+    const size_t    numOfChannels = S_LOG_CHANNEL_COUNT+S_LOGGING_ADDITIONAL_CHANNEL_COUNT;
 };
+
+#endif // end of header
 
 #ifdef SEMPER_LOGGING_IMPLEMENTATION
 
@@ -380,7 +391,7 @@ Semper::create_logging_context()
         GSemperLoggingCtx->channels[i].level = S_LOG_LEVEL_OFF;
         GSemperLoggingCtx->channels[i].type = S_LOG_CHANNEL_TYPE_CONSOLE;
         GSemperLoggingCtx->channels[i].id = i;
-        for(int j = 0; j < S_MAX_PATH_LENGTH; j++)
+        for(int j = 0; j < S_LOGGING_MAX_PATH_LENGTH; j++)
         {
             GSemperLoggingCtx->channels[i].path[j] = 0;
             GSemperLoggingCtx->channels[i].name[j] = 0;
