@@ -1,5 +1,5 @@
 /*
-   sMath, v0.1 (WIP)
+   sMath, v0.1.1 (WIP)
    * no dependencies
    * simple
    Do this:
@@ -211,7 +211,7 @@ namespace Semper
 	// vector operations
     inline float length   (const sVec2& v)                   { return sqrt(square(v.x) + square(v.y));}
     inline float length   (const sVec3& v)                   { return sqrt(square(v.x) + square(v.y) + square(v.z));}
-    inline float length   (const sVec4& v)                   { return sqrt(square(square(v.x) + square(v.y) + square(v.z) + square(v.w)));}
+    inline float length   (const sVec4& v)                   { return sqrt(square(v.x) + square(v.y) + square(v.z) + square(v.w));}
 	inline float lengthSqr(const sVec2& v)                   { return square(v.x) + square(v.y);}
 	inline float lengthSqr(const sVec3& v)                   { return square(v.x) + square(v.y) + square(v.z);}
 	inline float lengthSqr(const sVec4& v)                   { return square(v.x) + square(v.y) + square(v.z) + square(v.w);}
