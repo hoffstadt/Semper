@@ -200,10 +200,21 @@ static void _grow_ini_file(sIniFile* file)
 sIniSection*
 sIniFile::get_section(const char* name, const char* sub)
 {
-    for(int i = 0; i < sectionCount; i++)
-    { 
-        if(strncmp(sections[i].section, name, S_INI_MAX_NAME_LENGTH) == 0 && strncmp(sections[i].subsection, sub, S_INI_MAX_NAME_LENGTH) == 0) 
-            return &sections[i];
+    if(sub)
+    {
+        for(int i = 0; i < sectionCount; i++)
+        { 
+            if(strncmp(sections[i].section, name, S_INI_MAX_NAME_LENGTH) == 0 && strncmp(sections[i].subsection, sub, S_INI_MAX_NAME_LENGTH) == 0) 
+                return &sections[i];
+        }
+    }
+    else
+    {
+        for(int i = 0; i < sectionCount; i++)
+        { 
+            if(strncmp(sections[i].section, name, S_INI_MAX_NAME_LENGTH) == 0 && sections[i].subsection[0] == 0) 
+                return &sections[i];
+        }
     } 
     return nullptr;
 }
