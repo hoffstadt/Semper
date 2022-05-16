@@ -9,5 +9,6 @@ My personal WIP single-file "stb-style" libraries.
 | [_sStlLoader.h_](https://github.com/hoffstadt/Semper/blob/master/sStlLoader.h) | 0.1 | STL Loader |
 | [_sGltf.h_](https://github.com/hoffstadt/Semper/blob/master/sGltf.h) | 0.1 | GLTF 2.0 Loader |
 | [_sJson.h_](https://github.com/hoffstadt/Semper/blob/master/sJson.h) | 0.1 | JSON Loader |
+| [_sIni.h_](https://github.com/hoffstadt/Semper/blob/master/sIni.h) | 0.1 | ini Loader/Writer |
 | [_sMemory.h_](https://github.com/hoffstadt/Semper/blob/master/sMemory.h) | 0.1 | Memory Allocators |
 
