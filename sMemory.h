@@ -1,5 +1,5 @@
 /*
-   sMemory, v0.1 (WIP)
+   sMemory, v0.2 (WIP)
    * no dependencies
    * simple
    Do this:
@@ -59,10 +59,10 @@ typedef int sAllocatorPlacementPolicy; // -> enum sAllocatorPlacementPolicy_
 
 namespace Semper
 {
-    // memory allocation
-    int   get_active_allocations();
-    void* allocate_memory(size_t size);
-    void  free_memory    (void* ptr);
+    int    get_active_allocations();
+    void*  allocate_memory(size_t size);
+    void   free_memory    (void* ptr);
+    size_t get_next_power_of_2(size_t n);
 }
 
 //-----------------------------------------------------------------------------
@@ -93,10 +93,11 @@ struct sLinearAllocator
     unsigned char* buffer;
     size_t         bufferSize;    // size (bytes)
     size_t         currentOffset; // current ptr offset (bytes)
+    bool           autoCorrectAlignment; // automatically increases requested alignment to nearest power of 2
 
-    void initialize(size_t size);                  // creates allocator & allocates memory buffer
-    void initialize(size_t size, void* allocator); // creates allocator & allocates memory buffer
-    void initialize(void* memory, size_t size);    // creates allocator to manage memory
+    void initialize(size_t size, bool autoAlignment=true);                  // creates allocator & allocates memory buffer
+    void initialize(size_t size, void* allocator, bool autoAlignment=true); // creates allocator & allocates memory buffer
+    void initialize(void* memory, size_t size, bool autoAlignment=true);    // creates allocator to manage memory
 
     void         free_memory();                                         // free allocators memory
     void*        request_memory        (size_t size);                   // returns nullptr on failure
@@ -123,16 +124,17 @@ struct sStackAllocator
     size_t         bufferSize;    // size (bytes)
     size_t         currentOffset; // current ptr offset (bytes)
     size_t         currentID;     // current block ID (error checking)
+    bool           autoCorrectAlignment; // automatically increases requested alignment to nearest power of 2
 
     // stack allocator
-    void        initialize(size_t size);                    // creates allocator & allocates memory buffer
-    void        initialize(size_t size, void* allocator);   // creates allocator and allocates memory buffer
-    void        initialize(void* memory, size_t size);      // creates allocator to manage memory
-    void        free_memory();                              // frees allocators memory
-    void*       request_memory(size_t size);                // returns nullptr on failure
-    void*       request_aligned_memory(size_t size, size_t alignment);   // returns nullptr on failure
-    bool        return_memory(void* ptr);                                // sets the offset back (must be in reverse order)
-    inline void reset_allocator (){ currentOffset = 0u; currentID = 0u;} // returns offset to 0
+    void        initialize(size_t size, bool autoAlignment=true);                  // creates allocator & allocates memory buffer
+    void        initialize(size_t size, void* allocator, bool autoAlignment=true); // creates allocator and allocates memory buffer
+    void        initialize(void* memory, size_t size, bool autoAlignment=true);    // creates allocator to manage memory
+    void        free_memory();                                                     // frees allocators memory
+    void*       request_memory(size_t size);                                       // returns nullptr on failure
+    void*       request_aligned_memory(size_t size, size_t alignment);             // returns nullptr on failure
+    bool        return_memory(void* ptr);                                          // sets the offset back (must be in reverse order)
+    inline void reset_allocator (){ currentOffset = 0u; currentID = 0u;}           // returns offset to 0
 
 };
 
@@ -156,10 +158,11 @@ struct sPoolAllocator
     size_t              count;           // number of items owned by pool
     size_t              freeItemCount;   // number of items available
     sPoolAllocatorNode* head;            // start of freelist
+    bool                autoCorrectAlignment; // automatically increases requested alignment to nearest power of 2
 
-    void  initialize(size_t itemCount, size_t itemSize, size_t alignment); // creates allocator & allocates memory buffer
-    void  initialize(size_t itemCount, size_t itemSize, size_t alignment, void* allocator); // creates allocator and allocates memory buffer
-    void  initialize(size_t itemCount, size_t itemSize, size_t alignment, void* memory, size_t size); // creates allocator to manage memory
+    void  initialize(size_t itemCount, size_t itemSize, size_t alignment, bool autoAlignment=true);                            // creates allocator & allocates memory buffer
+    void  initialize(size_t itemCount, size_t itemSize, size_t alignment, void* allocator, bool autoAlignment=true);           // creates allocator and allocates memory buffer
+    void  initialize(size_t itemCount, size_t itemSize, size_t alignment, void* memory, size_t size, bool autoAlignment=true); // creates allocator to manage memory
     void  free_memory();            // free allocators memory
     void* request_memory();         // returns nullptr on failure
     bool  return_memory(void* ptr); // returns memory to free list
@@ -198,10 +201,11 @@ struct sGeneralLLAllocator
     size_t                    used;
     sGeneralLLAllocatorNode*  head;
     sAllocatorPlacementPolicy placementPolicy;
+    bool                      autoCorrectAlignment; // automatically increases requested alignment to nearest power of 2
 
-    void  initialize(size_t size, sAllocatorPlacementPolicy policy);
-    void  initialize(size_t size, sAllocatorPlacementPolicy policy, void* allocator); // creates allocator and allocates memory buffer
-    void  initialize(void* memory, sAllocatorPlacementPolicy policy, size_t size);    // creates allocator to manage memory
+    void  initialize(size_t size, sAllocatorPlacementPolicy policy, bool autoAlignment=true);
+    void  initialize(size_t size, sAllocatorPlacementPolicy policy, void* allocator, bool autoAlignment=true); // creates allocator and allocates memory buffer
+    void  initialize(void* memory, sAllocatorPlacementPolicy policy, size_t size, bool autoAlignment=true);    // creates allocator to manage memory
     void  free_memory();
     void* request_memory(size_t size);
     void* request_aligned_memory(size_t size, size_t alignment);
@@ -294,6 +298,7 @@ static void
 _set_default_state(sLinearAllocator* allocator)
 {
     S_MEMORY_ASSERT(allocator);
+    allocator->autoCorrectAlignment = true;
     allocator->type = S_LINEAR_ALLOCATOR;
     allocator->parentType = S_ALLOCATOR_TYPE_NONE;
     allocator->parentAllocator = nullptr;
@@ -303,17 +308,18 @@ _set_default_state(sLinearAllocator* allocator)
 }
 
 void
-sLinearAllocator::initialize(size_t size)
+sLinearAllocator::initialize(size_t size, bool autoAlignment)
 {
     _set_default_state(this);
     S_MEMORY_ASSERT(size > 0u);
+    autoCorrectAlignment = autoAlignment;
     parentType = S_DEFAULT_ALLOCATOR;
     bufferSize = size;
     buffer = (unsigned char*)S_MEMORY_ALLOC(size);
 }
 
 void
-sLinearAllocator::initialize(size_t size, void* allocator)
+sLinearAllocator::initialize(size_t size, void* allocator, bool autoAlignment)
 {
     _set_default_state(this);
     S_MEMORY_ASSERT(size > 0u);
@@ -322,6 +328,7 @@ sLinearAllocator::initialize(size_t size, void* allocator)
     if (allocator == nullptr)
         return;
 
+    autoCorrectAlignment = autoAlignment;
     parentAllocator = allocator;
     bufferSize = size;
     parentType = *(sAllocatorType*)allocator;
@@ -358,11 +365,12 @@ sLinearAllocator::initialize(size_t size, void* allocator)
 }
 
 void
-sLinearAllocator::initialize(void* memory, size_t size)
+sLinearAllocator::initialize(void* memory, size_t size, bool autoAlignment)
 {
     _set_default_state(this);
     S_MEMORY_ASSERT(size > 0u);
     S_MEMORY_ASSERT(memory != nullptr);
+    autoCorrectAlignment = autoAlignment;
     parentType = S_EXTERNAL_ALLOCATOR;
     bufferSize = size;
     buffer = (unsigned char*)memory;
@@ -426,6 +434,7 @@ sLinearAllocator::request_memory(size_t size)
 void*
 sLinearAllocator::request_aligned_memory(size_t size, size_t alignment)
 {
+    if(autoCorrectAlignment) alignment = Semper::get_next_power_of_2(alignment);
     S_MEMORY_ASSERT(_is_power_of_two(alignment));
     uintptr_t curr_ptr = (uintptr_t)buffer + (uintptr_t)currentOffset;
     uintptr_t offset = _align_forward_uintptr(curr_ptr, alignment);
@@ -454,6 +463,7 @@ static void
 _set_default_state(sStackAllocator* allocator)
 {
     S_MEMORY_ASSERT(allocator);
+    allocator->autoCorrectAlignment = true;
     allocator->type = S_STACK_ALLOCATOR;
     allocator->parentType = S_ALLOCATOR_TYPE_NONE;
     allocator->parentAllocator = nullptr;
@@ -464,10 +474,11 @@ _set_default_state(sStackAllocator* allocator)
 }
 
 void
-sStackAllocator::initialize(size_t size)
+sStackAllocator::initialize(size_t size, bool autoAlignment)
 {
     _set_default_state(this);
     S_MEMORY_ASSERT(size > 0u);
+    autoCorrectAlignment = autoAlignment;
     type = S_STACK_ALLOCATOR;
     parentType = S_DEFAULT_ALLOCATOR;
     bufferSize = size;
@@ -475,7 +486,7 @@ sStackAllocator::initialize(size_t size)
 }
 
 void 
-sStackAllocator::initialize(size_t size, void* allocator)
+sStackAllocator::initialize(size_t size, void* allocator, bool autoAlignment)
 {
     _set_default_state(this);
     S_MEMORY_ASSERT(size > 0u);
@@ -484,6 +495,7 @@ sStackAllocator::initialize(size_t size, void* allocator)
     if (allocator == nullptr)
         return;
 
+    autoCorrectAlignment = autoAlignment;
     parentType = *(sAllocatorType*)allocator;
     parentAllocator = allocator;
     bufferSize = size;
@@ -520,11 +532,12 @@ sStackAllocator::initialize(size_t size, void* allocator)
 }
 
 void
-sStackAllocator::initialize(void* memory, size_t size)
+sStackAllocator::initialize(void* memory, size_t size, bool autoAlignment)
 {
     _set_default_state(this);
     S_MEMORY_ASSERT(size > 0u);
     S_MEMORY_ASSERT(memory != nullptr);
+    autoCorrectAlignment = autoAlignment;
     parentType = S_EXTERNAL_ALLOCATOR;
     bufferSize = size;
     buffer = (unsigned char*)memory;
@@ -596,7 +609,7 @@ sStackAllocator::request_memory(size_t size)
 void*
 sStackAllocator::request_aligned_memory(size_t size, size_t alignment)
 {
-
+    if(autoCorrectAlignment) alignment = Semper::get_next_power_of_2(alignment);
     S_MEMORY_ASSERT(_is_power_of_two(alignment));
     if (alignment < 2u)
         return request_memory(size);
@@ -645,6 +658,7 @@ static void
 _set_default_state(sPoolAllocator* allocator)
 {
     S_MEMORY_ASSERT(allocator);
+    allocator->autoCorrectAlignment = true;
     allocator->type = S_POOL_ALLOCATOR;
     allocator->parentType = S_ALLOCATOR_TYPE_NONE;
     allocator->parentAllocator = nullptr;
@@ -657,15 +671,17 @@ _set_default_state(sPoolAllocator* allocator)
 }
 
 void
-sPoolAllocator::initialize(size_t itemCount, size_t itemSize, size_t alignment)
+sPoolAllocator::initialize(size_t itemCount, size_t itemSize, size_t alignment, bool autoAlignment)
 {
     _set_default_state(this);
     S_MEMORY_ASSERT(itemSize > 0u);
     S_MEMORY_ASSERT(itemCount > 0u);
     S_MEMORY_ASSERT(alignment > 0u);
+    autoCorrectAlignment = autoAlignment;
     parentType = S_DEFAULT_ALLOCATOR;
     count = itemCount;
     freeItemCount = itemCount;
+    if(autoCorrectAlignment) alignment = Semper::get_next_power_of_2(alignment);
     chunkSize = _align_forward_size(itemSize, alignment);
     S_MEMORY_ASSERT(chunkSize >= sizeof(sPoolAllocatorNode) && "Chunk size too small.");
     bufferSize = chunkSize * itemCount;
@@ -680,7 +696,7 @@ sPoolAllocator::initialize(size_t itemCount, size_t itemSize, size_t alignment)
 }
 
 void
-sPoolAllocator::initialize(size_t itemCount, size_t itemSize, size_t alignment, void* allocator)
+sPoolAllocator::initialize(size_t itemCount, size_t itemSize, size_t alignment, void* allocator, bool autoAlignment)
 {
     _set_default_state(this);
     S_MEMORY_ASSERT(itemSize > 0u);
@@ -690,6 +706,7 @@ sPoolAllocator::initialize(size_t itemCount, size_t itemSize, size_t alignment, 
 
     if (allocator == nullptr)
         return;
+    autoCorrectAlignment = autoAlignment;
     parentType = *(sAllocatorType*)allocator;
     parentAllocator = allocator;
     count = itemCount;
@@ -737,7 +754,7 @@ sPoolAllocator::initialize(size_t itemCount, size_t itemSize, size_t alignment, 
 }
 
 void
-sPoolAllocator::initialize(size_t itemCount, size_t itemSize, size_t alignment, void* memory, size_t size)
+sPoolAllocator::initialize(size_t itemCount, size_t itemSize, size_t alignment, void* memory, size_t size, bool autoAlignment)
 {
     _set_default_state(this);
     S_MEMORY_ASSERT(itemSize > 0u);
@@ -749,6 +766,7 @@ sPoolAllocator::initialize(size_t itemCount, size_t itemSize, size_t alignment, 
     if(memory == nullptr)
         return;
 
+    autoCorrectAlignment = autoAlignment;
     parentType = S_EXTERNAL_ALLOCATOR;
     count = itemCount;
     freeItemCount = itemCount;
@@ -841,6 +859,7 @@ static void
 _set_default_state(sGeneralLLAllocator* allocator)
 {
     S_MEMORY_ASSERT(allocator);
+    allocator->autoCorrectAlignment = true;
     allocator->type = S_GENERAL_LL_ALLOCATOR;
     allocator->parentType = S_ALLOCATOR_TYPE_NONE;
     allocator->parentAllocator = nullptr;
@@ -882,9 +901,10 @@ _insert_node(sGeneralLLAllocatorNode **phead, sGeneralLLAllocatorNode *prev_node
 }
 
 void
-sGeneralLLAllocator::initialize(size_t size, sAllocatorPlacementPolicy policy)
+sGeneralLLAllocator::initialize(size_t size, sAllocatorPlacementPolicy policy, bool autoAlignment)
 {
     _set_default_state(this);
+    autoCorrectAlignment = autoAlignment;
     buffer = S_MEMORY_ALLOC(size);
     placementPolicy = policy;
     bufferSize = size;
@@ -895,7 +915,7 @@ sGeneralLLAllocator::initialize(size_t size, sAllocatorPlacementPolicy policy)
 }
 
 void
-sGeneralLLAllocator::initialize(size_t size, sAllocatorPlacementPolicy policy, void* allocator)
+sGeneralLLAllocator::initialize(size_t size, sAllocatorPlacementPolicy policy, void* allocator, bool autoAlignment)
 {
     _set_default_state(this);
     S_MEMORY_ASSERT(allocator != nullptr);
@@ -936,6 +956,7 @@ sGeneralLLAllocator::initialize(size_t size, sAllocatorPlacementPolicy policy, v
         break;
     }
     
+    autoCorrectAlignment = autoAlignment;
     placementPolicy = policy;
     parentAllocator = allocator;
     bufferSize = size;
@@ -950,13 +971,14 @@ sGeneralLLAllocator::initialize(size_t size, sAllocatorPlacementPolicy policy, v
 }
 
 void
-sGeneralLLAllocator::initialize(void* memory, sAllocatorPlacementPolicy policy, size_t size)
+sGeneralLLAllocator::initialize(void* memory, sAllocatorPlacementPolicy policy, size_t size, bool autoAlignment)
 {
     _set_default_state(this);
     S_MEMORY_ASSERT(memory);
     S_MEMORY_ASSERT(size > 0);
     if(memory == nullptr)
         return;
+    autoCorrectAlignment = autoAlignment;
     buffer = memory;
     placementPolicy = policy;
     bufferSize = size;
@@ -1060,6 +1082,7 @@ _request_aligned_memory_find_best(sGeneralLLAllocator* allocator, size_t size, s
 void*
 sGeneralLLAllocator::request_aligned_memory(size_t size, size_t alignment)
 {
+    if(autoCorrectAlignment) alignment = Semper::get_next_power_of_2(alignment);
     S_MEMORY_ASSERT(size > 0u);
 
     alignment = alignment < 8 ? 8 : alignment;
@@ -1142,6 +1165,15 @@ sGeneralLLAllocator::return_memory(void* ptr)
         prev_node->blockSize += free_node->nextNode->blockSize;
         _remove_node(&head, prev_node, free_node);
     }
+}
+
+static size_t
+Semper::get_next_power_of_2(size_t n)
+{
+    size_t p = 1;
+    if (n && !(n & (n - 1))) return n;
+    while (p < n) p <<= 1;    
+    return p;
 }
 
 #endif // SEMPER_MEMORY_IMPLEMENTATION
