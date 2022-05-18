@@ -1,5 +1,5 @@
 /*
-   sStlLoader, v0.0.2 (WIP)
+   sStlLoader, v0.0.3 (WIP)
    * no dependencies
    Do this:
 	  #define SEMPER_STLLOAD_IMPLEMENTATION
@@ -98,8 +98,8 @@ Semper::load_stl(const char* file, sStlOptions options, float* data, size_t& cou
     info->yLimits[0] = FLT_MAX;
     info->zLimits[0] = FLT_MAX;
     info->xLimits[1] = -FLT_MAX;
-    info->yLimits[2] = -FLT_MAX;
-    info->zLimits[3] = -FLT_MAX;
+    info->yLimits[1] = -FLT_MAX;
+    info->zLimits[1] = -FLT_MAX;
 
     for(int i = 0; i < 64; i++) valueBuffer[i]=0;
     for(int i = 0; i < S_STL_MAX_LINE_LENGTH; i++) lineBuffer[i]=0;
