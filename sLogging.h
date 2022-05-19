@@ -1,5 +1,5 @@
 /*
-   sLogging, v0.1
+   sLogging, v0.2
 
    Do this:
 	  #define SEMPER_LOGGING_IMPLEMENTATION
@@ -826,12 +826,24 @@ Semper::log_custom(sLogChannelID channel, sLogChannelLevel level, sLogColor fgCo
 #endif
 
 #if defined(S_LOGGING_ON)
+#ifndef s_create_logging_context
 #define s_create_logging_context()     Semper::create_logging_context()
+#endif
+#ifndef s_destroy_logging_context
 #define s_destroy_logging_context()    Semper::destroy_logging_context()
+#endif
+#ifndef s_set_channel_level
 #define s_set_channel_level(ID, LEVEL) Semper::set_channel_level(ID, LEVEL)
+#endif
+#ifndef s_set_channel_name
 #define s_set_channel_name(ID, NAME)   Semper::set_channel_name(ID, NAME)
+#endif
+#ifndef s_push_channel
 #define s_push_channel(ID)             Semper::push_channel(ID)
+#endif
+#ifndef s_pop_channel
 #define s_pop_channel()                Semper::pop_channel()
+#endif
 #else
 #define s_create_logging_context()
 #define s_destroy_logging_context()
@@ -848,28 +860,52 @@ Semper::log_custom(sLogChannelID channel, sLogChannelLevel level, sLogColor fgCo
 #endif
 
 #if S_GLOBAL_LOG_LEVEL < 7
+#ifndef s_log_fatal
 #define s_log_fatal(...) Semper::log_fatal(__VA_ARGS__)
+#endif
+#ifndef s_log_fatal2
 #define s_log_fatal2(...) Semper::log_fatal2(__VA_ARGS__)
 #endif
+#endif
 #if S_GLOBAL_LOG_LEVEL < 6
+#ifndef s_log_error
 #define s_log_error(...) Semper::log_error(__VA_ARGS__)
+#endif
+#ifndef s_log_error2
 #define s_log_error2(...) Semper::log_error2(__VA_ARGS__)
 #endif
+#endif
 #if S_GLOBAL_LOG_LEVEL < 5
+#ifndef s_log_warn
 #define s_log_warn(...) Semper::log_warn(__VA_ARGS__)
+#endif
+#ifndef s_log_warn2
 #define s_log_warn2(...) Semper::log_warn2(__VA_ARGS__)
 #endif
+#endif
 #if S_GLOBAL_LOG_LEVEL < 4
+#ifndef s_log_info
 #define s_log_info(...) Semper::log_info(__VA_ARGS__)
+#endif
+#ifndef s_log_info2
 #define s_log_info2(...) Semper::log_info2(__VA_ARGS__)
 #endif
+#endif
 #if S_GLOBAL_LOG_LEVEL < 3
+#ifndef s_log_debug
 #define s_log_debug(...) Semper::log_debug(__VA_ARGS__)
+#endif
+#ifndef s_log_debug2
 #define s_log_debug2(...) Semper::log_debug2(__VA_ARGS__)
 #endif
+#endif
 #if S_GLOBAL_LOG_LEVEL < 2
+#ifndef s_log_trace
 #define s_log_trace(...)   Semper::log_trace(__VA_ARGS__)
+#endif
+#ifndef s_log_trace2
 #define s_log_trace2(...)   Semper::log_trace2(__VA_ARGS__)
+#endif
 #endif
 
 // defaults
