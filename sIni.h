@@ -1,5 +1,5 @@
 /*
-   sIni, v0.1 (WIP)
+   sIni, v0.2 (WIP)
    * no dependencies
    * simple
    Do this:
@@ -229,6 +229,7 @@ void
 sIniFile::initialize(size_t sectionCapacity)
 {
     sectionCount = 0u;
+    _capacity = sectionCapacity;
     if(sectionCapacity == 0) _capacity = 16;
     sections = (sIniSection*)S_INI_ALLOC(sizeof(sIniSection)*_capacity);       
 }
@@ -454,7 +455,10 @@ sIniSection::add_entry(const char* name, const char** value, int size)
     for(int i = 0; i < size; i++)
     {
         entries[entrySize].stringArrayValue[i] = (char*)S_INI_ALLOC((strlen(value[i])+1)*sizeof(char*));
+        
         strcpy(entries[entrySize].stringArrayValue[i], value[i]);
+        auto blah = entries[entrySize].stringArrayValue[i];
+        int a = 5;
     }
     entries[entrySize].length = size;
     entries[entrySize].type = S_INI_TYPE_STRING_ARRAY;
@@ -474,7 +478,6 @@ Semper::load_ini_file(const char* file)
 
 	if (dataFile == nullptr)
 	{
-		S_INI_ASSERT(false && "File not found.");
         return result;
 	}
 
@@ -845,7 +848,7 @@ Semper::save_ini_file(const char* file, sIniFile* iniFile)
                 {
                     for(int k = 0; k < entry.length-1; k++)
                     {
-                        fprintf(dataFile, "%s,", entry.boolArrayValue[k] ? "true":"false"); break;
+                        fprintf(dataFile, "%s,", entry.boolArrayValue[k] ? "true":"false");
                     }
                     fprintf(dataFile, "%s\n", entry.boolArrayValue[entry.length-1] ? "true":"false"); break;
                     break;
@@ -854,7 +857,7 @@ Semper::save_ini_file(const char* file, sIniFile* iniFile)
                 {
                     for(int k = 0; k < entry.length-1; k++)
                     {
-                        fprintf(dataFile, "\"%s\",", entry.stringArrayValue[k]); break;
+                        fprintf(dataFile, "\"%s\",", entry.stringArrayValue[k]);
                     }
                     fprintf(dataFile, "\"%s\"\n", entry.stringArrayValue[entry.length-1]); break;
                     break;
